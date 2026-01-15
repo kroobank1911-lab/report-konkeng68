@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบตรวจผลการสอบรายบุคคล</title>
+  <link rel="icon" type="image/png" href="https://img5.pic.in.th/file/secure-sv1/logowatyaischool.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Sarabun', sans-serif;
+    }
+    * {
+      font-family: 'Sarabun', sans-serif;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #FFEAD3 0%, #EA7B7B 50%, #D25353 100%);
+    }
+    .card-shadow {
+      box-shadow: 0 10px 40px rgba(158, 59, 59, 0.2);
+    }
+    .table-header {
+      background: linear-gradient(90deg, #D25353, #9E3B3B);
+    }
+    .score-cell {
+      transition: all 0.3s ease;
+    }
+    .score-cell:hover {
+      transform: scale(1.05);
+      background: #FFEAD3;
+    }
+    .medal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .medal-gold {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #8B4513;
+    }
+    .medal-silver {
+      background: linear-gradient(135deg, #E8E8E8, #C0C0C0);
+      color: #4A4A4A;
+    }
+    .medal-bronze {
+      background: linear-gradient(135deg, #CD7F32, #B87333);
+      color: #FFF;
+    }
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app-container" class="min-h-full gradient-bg p-4 md:p-8 overflow-auto"><!-- Header -->
+   <div class="text-center mb-6 fade-in">
+    <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full shadow-lg mb-4 p-2"><img src="https://img5.pic.in.th/file/secure-sv1/logowatyaischool.png" alt="โลโก้โรงเรียน" class="w-full h-full object-contain">
+    </div>
+    <h1 id="main-title" class="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">ระบบตรวจผลการสอบรายบุคคล</h1>
+    <p class="text-white/80 mt-2 text-sm md:text-base">โครงการทดสอบความรู้ทางวิชาการ โรงเรียนสังกัดเทศบาลนครนครศรีธรรมราช ปีการศึกษา 2568</p>
+   </div><!-- Search Section -->
+   <div class="max-w-2xl mx-auto mb-6 fade-in">
+    <div class="bg-white rounded-2xl p-4 md:p-6 card-shadow">
+     <div class="flex flex-col md:flex-row gap-3">
+      <div class="flex-1 relative">
+       <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+       </svg><input type="text" id="search-input" placeholder="กรอกเลขประจำตัวนักเรียน" class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#D25353] focus:outline-none transition-colors text-gray-700">
+      </div><button id="search-btn" class="px-6 py-3 bg-gradient-to-r from-[#D25353] to-[#9E3B3B] text-white font-semibold rounded-xl hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+       </svg> ค้นหา </button> <button id="refresh-btn" class="px-6 py-3 bg-[#FFEAD3] text-[#9E3B3B] font-semibold rounded-xl hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+       </svg> รีเฟรช </button>
+     </div>
+    </div>
+   </div><!-- Results Section -->
+   <div id="results-container" class="max-w-5xl mx-auto hidden fade-in"><!-- Student Info Card -->
+    <div class="bg-white rounded-2xl p-4 md:p-6 card-shadow mb-6">
+     <div class="flex items-center gap-4 mb-4">
+      <div class="w-16 h-16 bg-gradient-to-br from-[#EA7B7B] to-[#D25353] rounded-full flex items-center justify-center text-white text-2xl font-bold" id="student-avatar">
+       ?
+      </div>
+      <div class="flex-1">
+       <h2 class="text-xl md:text-2xl font-bold text-[#9E3B3B]" id="student-name">-</h2>
+       <div class="flex flex-wrap gap-2 mt-2"><span class="px-3 py-1 bg-[#FFEAD3] text-[#9E3B3B] rounded-full text-sm font-medium" id="student-class">ชั้น: -</span> <span class="px-3 py-1 bg-[#FFEAD3] text-[#9E3B3B] rounded-full text-sm font-medium" id="student-room">ห้อง: -</span> <span class="px-3 py-1 bg-[#FFEAD3] text-[#9E3B3B] rounded-full text-sm font-medium" id="student-number">เลขที่: -</span> <span class="px-3 py-1 bg-[#FFEAD3] text-[#9E3B3B] rounded-full text-sm font-medium" id="student-id">รหัส: -</span>
+       </div>
+      </div>
+     </div>
+    </div><!-- Score Table -->
+    <div class="bg-white rounded-2xl overflow-hidden card-shadow">
+     <div class="table-header text-white p-4">
+      <h3 class="text-lg font-bold text-center">📊 ผลคะแนนสอบรายวิชา</h3>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead>
+        <tr class="bg-[#FFEAD3]">
+         <th class="px-4 py-3 text-left text-[#9E3B3B] font-semibold">วิชา</th>
+         <th class="px-4 py-3 text-center text-[#9E3B3B] font-semibold">คะแนนเต็ม</th>
+         <th class="px-4 py-3 text-center text-[#9E3B3B] font-semibold">คะแนนที่ได้</th>
+         <th class="px-4 py-3 text-center text-[#9E3B3B] font-semibold">ร้อยละ</th>
+         <th class="px-4 py-3 text-center text-[#9E3B3B] font-semibold">ระดับ</th>
+        </tr>
+       </thead>
+       <tbody id="score-table-body"><!-- Scores will be inserted here -->
+       </tbody>
+       <tfoot>
+        <tr class="bg-gradient-to-r from-[#D25353] to-[#9E3B3B] text-white font-bold">
+         <td class="px-4 py-4 text-left">รวมทั้งหมด</td>
+         <td class="px-4 py-4 text-center" id="total-full">-</td>
+         <td class="px-4 py-4 text-center" id="total-score">-</td>
+         <td class="px-4 py-4 text-center" id="total-percent">-</td>
+         <td class="px-4 py-4 text-center">-</td>
+        </tr>
+       </tfoot>
+      </table>
+     </div><!-- Summary Card -->
+     <div class="p-4 md:p-6 bg-[#FFEAD3]/50">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+       <div class="bg-white rounded-xl p-4 text-center card-shadow">
+        <div class="text-3xl font-bold text-[#D25353]" id="summary-score">
+         -
+        </div>
+        <div class="text-gray-500 text-sm mt-1">
+         คะแนนรวม
+        </div>
+       </div>
+       <div class="bg-white rounded-xl p-4 text-center card-shadow">
+        <div class="text-3xl font-bold text-[#9E3B3B]" id="summary-percent">
+         -
+        </div>
+        <div class="text-gray-500 text-sm mt-1">
+         ร้อยละ
+        </div>
+       </div>
+       <div class="bg-white rounded-xl p-4 text-center card-shadow">
+        <div class="text-3xl font-bold" id="summary-rank">
+         -
+        </div>
+        <div class="text-gray-500 text-sm mt-1">
+         อันดับในชั้น
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Empty State -->
+   <div id="empty-state" class="max-w-md mx-auto text-center py-12 fade-in">
+    <div class="w-24 h-24 mx-auto bg-white/30 rounded-full flex items-center justify-center mb-4">
+     <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+     </svg>
+    </div>
+    <h3 class="text-xl font-semibold text-white mb-2">ยังไม่มีข้อมูล</h3>
+    <p class="text-white/70">กรุณากรอกเลขประจำตัวนักเรียน เพื่อค้นหาผลการสอบ</p>
+   </div><!-- Footer -->
+   <div class="text-center mt-8 text-white/80 text-sm">
+    <p>© 2026 โรงเรียนเทศบาลวัดใหญ่ สงวนลิขสิทธิ์</p>
+    <p class="mt-1">ระบบประกาศผลสอบรายบุคคลออนไลน์ | พัฒนาโดย ครูวัชรพงศ์ รอบคอบ</p>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      system_title: 'ระบบตรวจผลการสอบรายบุคคล | โรงเรียนเทศบาลวัดใหญ่',
+      search_placeholder: 'กรอกเลขประจำตัวนักเรียน',
+      primary_color: '#D25353',
+      secondary_color: '#9E3B3B',
+      accent_color: '#FFEAD3',
+      background_color: '#EA7B7B',
+      text_color: '#FFFFFF'
+    };
+
+    let studentsData = [];
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyU8xffvXdKk5r-8IP1zcxzlA7bRSjSHKMK1aeMGmPgaxzdssoOoTYFcm_xfph1AW_M/exec';
+
+    // Subject icons
+    const subjectIcons = {
+      'คณิตศาสตร์': '🔢',
+      'วิทยาศาสตร์': '🔬',
+      'ภาษาอังกฤษ': '🌐',
+      'ภาษาไทย': '📚',
+      'สังคมศึกษา': '🌍'
+    };
+
+    // Get medal badge HTML based on percentage
+    function getMedalBadge(percent) {
+      const p = parseFloat(percent);
+      if (p >= 85) {
+        return '<span class="medal-badge medal-gold">🥇 เหรียญทอง</span>';
+      } else if (p >= 75) {
+        return '<span class="medal-badge medal-silver">🥈 เหรียญเงิน</span>';
+      } else if (p >= 65) {
+        return '<span class="medal-badge medal-bronze">🥉 เหรียญทองแดง</span>';
+      }
+      return '<span class="text-gray-400 text-sm">-</span>';
+    }
+
+    // Calculate rank in class based on total score with subject priority tiebreaker
+    function calculateRank(currentStudent, allStudents) {
+      // กรองนักเรียนในชั้นเดียวกัน
+      const sameClassStudents = allStudents.filter(s => 
+        (s.class && currentStudent.class && s.class.toString() === currentStudent.class.toString()) ||
+        (s.grade && currentStudent.grade && s.grade.toString() === currentStudent.grade.toString())
+      );
+
+      // คำนวณคะแนนรวมและร้อยละของแต่ละคน พร้อมคะแนนแต่ละวิชา
+      const studentsWithScores = sameClassStudents.map(s => {
+        const subjects = [
+          { full: parseFloat(s.math_full) || 0, score: parseFloat(s.math) || 0 },
+          { full: parseFloat(s.science_full) || 0, score: parseFloat(s.science) || 0 },
+          { full: parseFloat(s.english_full) || 0, score: parseFloat(s.english) || 0 },
+          { full: parseFloat(s.thai_full) || 0, score: parseFloat(s.thai) || 0 },
+          { full: parseFloat(s.social_full) || 0, score: parseFloat(s.social) || 0 }
+        ];
+
+        let totalFull = 0;
+        let totalScore = 0;
+        subjects.forEach(sub => {
+          totalFull += sub.full;
+          totalScore += sub.score;
+        });
+
+        const percent = totalFull > 0 ? (totalScore / totalFull) * 100 : 0;
+
+        return {
+          student_id: s.student_id,
+          totalScore: totalScore,
+          totalFull: totalFull,
+          percent: percent,
+          // เก็บคะแนนแต่ละวิชาสำหรับ tiebreaker ตามลำดับความสำคัญ
+          math: parseFloat(s.math) || 0,
+          science: parseFloat(s.science) || 0,
+          english: parseFloat(s.english) || 0,
+          thai: parseFloat(s.thai) || 0,
+          social: parseFloat(s.social) || 0
+        };
+      });
+
+      // เรียงลำดับ คะแนนรวมมากที่สุดอันดับ 1
+      // หากคะแนนรวมเท่ากัน ให้เรียงตามลำดับความสำคัญของวิชา
+      studentsWithScores.sort((a, b) => {
+        // เปรียบเทียบคะแนนรวมก่อน
+        if (b.totalScore !== a.totalScore) {
+          return b.totalScore - a.totalScore;
+        }
+        
+        // ถ้าคะแนนรวมเท่ากัน ให้เปรียบเทียบตามลำดับความสำคัญของวิชา
+        // 1. คณิตศาสตร์
+        if (b.math !== a.math) return b.math - a.math;
+        // 2. วิทยาศาสตร์
+        if (b.science !== a.science) return b.science - a.science;
+        // 3. ภาษาอังกฤษ
+        if (b.english !== a.english) return b.english - a.english;
+        // 4. ภาษาไทย
+        if (b.thai !== a.thai) return b.thai - a.thai;
+        // 5. สังคมศึกษา
+        return b.social - a.social;
+      });
+
+      // หาตำแหน่งของนักเรียนคนนี้
+      const position = studentsWithScores.findIndex(s => 
+        s.student_id && currentStudent.student_id && 
+        s.student_id.toString() === currentStudent.student_id.toString()
+      ) + 1;
+
+      return {
+        position: position > 0 ? position : '-',
+        total: studentsWithScores.length
+      };
+    }
+
+    // Load data via JSONP
+    function loadData() {
+      Swal.fire({
+        title: 'กำลังโหลดข้อมูล...',
+        html: '<div class="pulse-animation">กรุณารอสักครู่</div>',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Remove old callback script if exists
+      const oldScript = document.getElementById('jsonp-script');
+      if (oldScript) {
+        oldScript.remove();
+      }
+
+      // Create callback function
+      window.handleJSONPResponse = function(data) {
+        Swal.close();
+        if (data && data.data) {
+          studentsData = data.data;
+          Swal.fire({
+            icon: 'success',
+            title: 'โหลดข้อมูลสำเร็จ!',
+            text: `พบข้อมูลนักเรียน ${studentsData.length} คน`,
+            confirmButtonColor: '#D25353',
+            timer: 2000,
+            timerProgressBar: true
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถโหลดข้อมูลได้',
+            confirmButtonColor: '#D25353'
+          });
+        }
+      };
+
+      // Create JSONP script
+      const script = document.createElement('script');
+      script.id = 'jsonp-script';
+      script.src = `${API_URL}?callback=handleJSONPResponse&_=${Date.now()}`;
+      script.onerror = function() {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+          confirmButtonColor: '#D25353'
+        });
+      };
+      document.body.appendChild(script);
+    }
+
+    // Search student
+    function searchStudent(query) {
+      if (!query.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณากรอกข้อมูล',
+          text: 'กรุณากรอกเลขประจำตัวนักเรียน',
+          confirmButtonColor: '#D25353'
+        });
+        return;
+      }
+
+      const searchTerm = query.trim().toLowerCase();
+      const student = studentsData.find(s => 
+        (s.student_id && s.student_id.toString().toLowerCase() === searchTerm)
+      );
+
+      if (student) {
+        displayStudent(student);
+      } else {
+        document.getElementById('results-container').classList.add('hidden');
+        document.getElementById('empty-state').classList.remove('hidden');
+        Swal.fire({
+          icon: 'info',
+          title: 'ไม่พบข้อมูล',
+          text: 'ไม่พบข้อมูลนักเรียนที่ค้นหา',
+          confirmButtonColor: '#D25353'
+        });
+      }
+    }
+
+    // Display student data
+    function displayStudent(student) {
+      document.getElementById('results-container').classList.remove('hidden');
+      document.getElementById('empty-state').classList.add('hidden');
+
+      // Get name
+      const fullName = `${student.firstname || ''} ${student.lastname || ''}`.trim() || student.name || '-';
+      const firstChar = (student.firstname || student.name || '?').charAt(0);
+
+      // Update student info
+      document.getElementById('student-avatar').textContent = firstChar;
+      document.getElementById('student-name').textContent = fullName;
+      document.getElementById('student-class').textContent = `ชั้นประถมศึกษาปีที่: ${student.class || student.grade || '-'}`;
+      document.getElementById('student-room').textContent = `ห้อง: ${student.room || '-'}`;
+      document.getElementById('student-number').textContent = `เลขที่: ${student.number || student.no || '-'}`;
+      document.getElementById('student-id').textContent = `เลขประจำตัวนักเรียน: ${student.student_id || '-'}`;
+
+      // Subjects
+      const subjects = [
+        { name: 'คณิตศาสตร์', full: student.math_full || 100, score: student.math || 0 },
+        { name: 'วิทยาศาสตร์', full: student.science_full || 100, score: student.science || 0 },
+        { name: 'ภาษาอังกฤษ', full: student.english_full || 100, score: student.english || 0 },
+        { name: 'ภาษาไทย', full: student.thai_full || 100, score: student.thai || 0 },
+        { name: 'สังคมศึกษา', full: student.social_full || 100, score: student.social || 0 }
+      ];
+
+      // Build table
+      const tbody = document.getElementById('score-table-body');
+      tbody.innerHTML = '';
+
+      let totalFull = 0;
+      let totalScore = 0;
+
+      subjects.forEach((subject, index) => {
+        const full = parseFloat(subject.full) || 0;
+        const score = parseFloat(subject.score) || 0;
+        const percent = full > 0 ? ((score / full) * 100).toFixed(2) : 0;
+        
+        totalFull += full;
+        totalScore += score;
+
+        const row = document.createElement('tr');
+        row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+        row.innerHTML = `
+          <td class="px-4 py-3 text-left score-cell">
+            <span class="mr-2">${subjectIcons[subject.name] || '📖'}</span>
+            ${subject.name}
+          </td>
+          <td class="px-4 py-3 text-center score-cell font-medium">${full}</td>
+          <td class="px-4 py-3 text-center score-cell font-bold text-[#D25353]">${score}</td>
+          <td class="px-4 py-3 text-center score-cell">
+            <span class="px-2 py-1 rounded-full text-sm font-medium ${getPercentColor(percent)}">
+              ${percent}%
+            </span>
+          </td>
+          <td class="px-4 py-3 text-center score-cell">
+            ${getMedalBadge(percent)}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Update totals
+      const totalPercent = totalFull > 0 ? ((totalScore / totalFull) * 100).toFixed(2) : 0;
+      document.getElementById('total-full').textContent = totalFull;
+      document.getElementById('total-score').textContent = totalScore;
+      document.getElementById('total-percent').textContent = `${totalPercent}%`;
+
+      // Update summary
+      document.getElementById('summary-score').textContent = `${totalScore}/${totalFull}`;
+      document.getElementById('summary-percent').textContent = `${totalPercent}%`;
+      
+      // คำนวณและแสดงอันดับ
+      const rank = calculateRank(student, studentsData);
+      const rankElement = document.getElementById('summary-rank');
+      rankElement.textContent = `${rank.position}/${rank.total}`;
+      
+      // เปลี่ยนสีตามอันดับ
+      if (rank.position === 1) {
+        rankElement.className = 'text-3xl font-bold text-yellow-500'; // ทอง
+      } else if (rank.position === 2) {
+        rankElement.className = 'text-3xl font-bold text-gray-400'; // เงิน
+      } else if (rank.position === 3) {
+        rankElement.className = 'text-3xl font-bold text-orange-600'; // ทองแดง
+      } else if (rank.position <= 10) {
+        rankElement.className = 'text-3xl font-bold text-[#D25353]'; // สีแดง อันดับ 4-10
+      } else {
+        rankElement.className = 'text-3xl font-bold text-gray-600'; // สีเทา นอกอันดับ 10
+      }
+
+      // Scroll to results
+      document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Get color based on percentage
+    function getPercentColor(percent) {
+      const p = parseFloat(percent);
+      if (p >= 80) return 'bg-green-100 text-green-700';
+      if (p >= 70) return 'bg-blue-100 text-blue-700';
+      if (p >= 60) return 'bg-yellow-100 text-yellow-700';
+      if (p >= 50) return 'bg-orange-100 text-orange-700';
+      return 'bg-red-100 text-red-700';
+    }
+
+    // Config change handler
+    async function onConfigChange(config) {
+      document.getElementById('main-title').textContent = config.system_title || defaultConfig.system_title;
+      document.getElementById('search-input').placeholder = config.search_placeholder || defaultConfig.search_placeholder;
+    }
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => {
+                config.accent_color = value;
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            },
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['system_title', config.system_title || defaultConfig.system_title],
+          ['search_placeholder', config.search_placeholder || defaultConfig.search_placeholder]
+        ])
+      });
+    }
+
+    // Event listeners
+    document.getElementById('search-btn').addEventListener('click', () => {
+      const query = document.getElementById('search-input').value;
+      searchStudent(query);
+    });
+
+    document.getElementById('search-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = document.getElementById('search-input').value;
+        searchStudent(query);
+      }
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+      loadData();
+    });
+
+    // Initial load
+    loadData();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bd514f833417336',t:'MTc2ODMwOTI4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
